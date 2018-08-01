@@ -188,6 +188,16 @@ class File extends Node implements IFile, IFileNode {
 				// because we have no clue about the cause we can only throw back a 500/Internal Server Error
 				throw new Exception('Could not write file contents');
 			}
+
+			try {
+				$this->changeLock(ILockingProvider::LOCK_EXCLUSIVE);
+			} catch (LockedException $e) {
+				if ($needsPartFile) {
+					$partStorage->unlink($internalPartPath);
+				}
+				throw new FileLocked($e->getMessage(), $e->getCode(), $e);
+			}
+
 			list($count, $result) = \OC_Helper::streamCopy($data, $target);
 			\fclose($target);
 
@@ -229,15 +239,6 @@ class File extends Node implements IFile, IFileNode {
 				}
 			} else {
 				$run = true;
-			}
-
-			try {
-				$this->changeLock(ILockingProvider::LOCK_EXCLUSIVE);
-			} catch (LockedException $e) {
-				if ($needsPartFile) {
-					$partStorage->unlink($internalPartPath);
-				}
-				throw new FileLocked($e->getMessage(), $e->getCode(), $e);
 			}
 
 			if ($needsPartFile) {
