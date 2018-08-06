@@ -201,6 +201,12 @@ class File extends Node implements IFile, IFileNode {
 			list($count, $result) = \OC_Helper::streamCopy($data, $target);
 			\fclose($target);
 
+			try {
+				$this->changeLock(ILockingProvider::LOCK_SHARED);
+			} catch (LockedException $e) {
+				throw new FileLocked($e->getMessage(), $e->getCode(), $e);
+			}
+
 			if (!self::isChecksumValid($partStorage, $internalPartPath)) {
 				throw new BadRequest('The computed checksum does not match the one received from the client.');
 			}
@@ -239,6 +245,15 @@ class File extends Node implements IFile, IFileNode {
 				}
 			} else {
 				$run = true;
+			}
+
+			try {
+				$this->changeLock(ILockingProvider::LOCK_EXCLUSIVE);
+			} catch (LockedException $e) {
+				if ($needsPartFile) {
+					$partStorage->unlink($internalPartPath);
+				}
+				throw new FileLocked($e->getMessage(), $e->getCode(), $e);
 			}
 
 			if ($needsPartFile) {
