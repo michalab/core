@@ -205,9 +205,10 @@ class Scanner extends BasicEmitter implements IScanner {
 					}
 					if (!empty($newData)) {
 						// Only reset checksum on file change
-						foreach (\array_intersect_key($newData, $data) as $key => $value) {
-							if (\in_array($key, ['size', 'storage_mtime', 'mtime', 'etag']) && $data[$key] != $newData[$key]) {
+						foreach (['size', 'storage_mtime', 'mtime', 'etag'] as $dataKey) {
+							if (isset($newData[$dataKey])) {
 								$newData['checksum'] = '';
+								break;
 							}
 						}
 
