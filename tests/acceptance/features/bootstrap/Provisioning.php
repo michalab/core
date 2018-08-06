@@ -1456,7 +1456,8 @@ trait Provisioning {
 	 * @return array
 	 */
 	public function getArrayOfAppInfoResponded($resp) {
-		$listCheckedElements = $resp->xml()->data[0];
+		$listCheckedElements
+			= $this->getResponseXml($resp)->data[0];
 		$extractedElementsArray
 			= \json_decode(\json_encode($listCheckedElements), 1);
 		return $extractedElementsArray;
